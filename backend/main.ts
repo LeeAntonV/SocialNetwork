@@ -14,12 +14,18 @@ app.use(express.json());
 
 app.post("/login", (req, res) => {
     const { email, password } = req.body;
-    console.log(email);
-    console.log(password);
+    console.log("login");
+    console.log(email)
+    console.log(password)
     res.send({status: 200});
 })
 
-app.get("/register", (req, res) => {
+app.post("/register", (req, res) => {
+    const { email, password } = req.body;
+    console.log("register");
+    console.log(email);
+    console.log(password);
+    res.send({status: 200});
 })
 
 app.listen(8000)

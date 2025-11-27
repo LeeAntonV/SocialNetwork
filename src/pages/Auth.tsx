@@ -1,14 +1,24 @@
 import { useEffect, useRef, useState } from "react";
+import {useNavigate} from "react-router-dom";
+import {FaEye, FaEyeSlash} from "react-icons/fa";
 
 export default function Authorization() {
+    const navigate = useNavigate();
+
+    const [showPassword, setShowPassword] = useState(false);
+
     const [activeTab, setActiveTab] = useState<"login" | "register">("login");
 
     const loginRef = useRef<HTMLFormElement | null>(null);
     const registerRef = useRef<HTMLFormElement | null>(null);
     const containerRef = useRef<HTMLDivElement | null>(null);
 
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
+    const [logEmail, setLogEmail] = useState("");
+    const [logPassword, setLogPassword] = useState("");
+
+    const [regEmail, setRegEmail] = useState("");
+    const [regPassword, setRegPassword] = useState("");
+    const [regCheckPassword, setRegCheckPassword] = useState("");
 
     useEffect(() => {
         const container = containerRef.current;
@@ -39,7 +49,11 @@ export default function Authorization() {
                     "Content-Type": "application/json",
                     "Accept": "application/json",
                 },
-                body: JSON.stringify({email, password}),
+                body: JSON.stringify(
+                    {
+                        "email":logEmail,
+                        "password":logPassword}
+                ),
             });
 
             if (!res.ok) {
@@ -48,8 +62,42 @@ export default function Authorization() {
 
             const data = await res.json();
             console.log(data);
+            navigate("/feed");
         } catch (error) {
-            console.error("❌ Login error:", error);
+            console.error("Login error:", error);
+        }
+    }
+
+    const handleRegisterSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+
+        if (regPassword !== regCheckPassword) {
+            throw new Error("Passwords do not match");
+        }
+
+        try{
+            const res = await fetch("http://localhost:8000/register", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                },
+                body: JSON.stringify(
+                    {
+                        "email":regEmail,
+                        "password":regPassword}
+                ),
+            })
+
+            if (!res.ok) {
+                throw new Error(`HTTP ${res.status} - Failed to register`);
+            }
+
+            const data = await res.json();
+            console.log(data);
+            navigate("/feed");
+        } catch (error) {
+            console.error("Register error:", error);
         }
     }
 
@@ -99,21 +147,33 @@ export default function Authorization() {
                     >
                         <input
                             type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            value={logEmail}
+                            onChange={(e) => setLogEmail(e.target.value)}
                             placeholder="Email"
                             autoComplete="off"
                             className="p-2.5 text-sm rounded-lg bg-blue-900/40 border border-blue-700
                      text-white placeholder-white/60 focus:outline-none focus:border-blue-400 hover:border-white transition"
+                            required
                         />
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Password"
-                            className="p-2.5 text-sm rounded-lg bg-blue-900/40 border border-blue-700
+                        <div className="relative w-full">
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                value={logPassword}
+                                onChange={(e) => setLogPassword(e.target.value)}
+                                placeholder="Password"
+                                className="w-full p-2.5 text-sm rounded-lg bg-blue-900/40 border border-blue-700
                      text-white placeholder-white/60 focus:outline-none focus:border-blue-400 hover:border-white transition"
-                        />
+                                required
+                            />
+
+                            <button
+                                type="button"
+                                className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 text-xs rounded-md transition"
+                                onClick={() => setShowPassword(!showPassword)}
+                            >
+                                {showPassword ? <FaEye /> : <FaEyeSlash />}
+                            </button>
+                        </div>
 
                         <button
                             className="w-full bg-blue-800 hover:bg-blue-900 border border-white/20 rounded-lg py-2 font-semibold transition-colors">
@@ -134,6 +194,7 @@ export default function Authorization() {
 
                     <form
                         ref={registerRef}
+                        onSubmit={handleRegisterSubmit}
                         className={`absolute inset-0 w-full flex flex-col gap-3 transition-all duration-500 ease-in-out
           ${
                             activeTab === "register"
@@ -143,22 +204,52 @@ export default function Authorization() {
                     >
                         <input
                             type="email"
+                            value={regEmail}
+                            onChange={(e) => setRegEmail(e.target.value)}
                             placeholder="Email"
                             className="p-2.5 text-sm rounded-lg bg-blue-900/40 border border-blue-700
                      text-white placeholder-white/60 focus:outline-none focus:border-blue-400 hover:border-white transition"
+                            required
                         />
-                        <input
-                            type="password"
-                            placeholder="Password"
-                            className="p-2.5 text-sm rounded-lg bg-blue-900/40 border border-blue-700
+                        <div className="relative w-full">
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                value={regPassword}
+                                onChange={(e) => setRegPassword(e.target.value)}
+                                placeholder="Password"
+                                className="w-full p-2.5 text-sm rounded-lg bg-blue-900/40 border border-blue-700
                      text-white placeholder-white/60 focus:outline-none focus:border-blue-400 hover:border-white transition"
-                        />
-                        <input
-                            type="password"
-                            placeholder="Confirm Password"
-                            className="p-2.5 text-sm rounded-lg bg-blue-900/40 border border-blue-700
+                                required
+                            />
+
+                            <button
+                                type="button"
+                                className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 text-xs rounded-md transition"
+                                onClick={() => setShowPassword(!showPassword)}
+                            >
+                                {showPassword ? <FaEye /> : <FaEyeSlash />}
+                            </button>
+                        </div>
+
+                        <div className="relative w-full">
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                value={regCheckPassword}
+                                onChange={(e) => setRegCheckPassword(e.target.value)}
+                                placeholder="Password"
+                                className="w-full p-2.5 text-sm rounded-lg bg-blue-900/40 border border-blue-700
                      text-white placeholder-white/60 focus:outline-none focus:border-blue-400 hover:border-white transition"
-                        />
+                                required
+                            />
+
+                            <button
+                                type="button"
+                                className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 text-xs rounded-md transition"
+                                onClick={() => setShowPassword(!showPassword)}
+                            >
+                                {showPassword ? <FaEye /> : <FaEyeSlash />}
+                            </button>
+                        </div>
 
                         <button
                             className="w-full bg-blue-800 hover:bg-blue-900 border border-white/20 rounded-lg py-2 font-semibold transition-colors">
